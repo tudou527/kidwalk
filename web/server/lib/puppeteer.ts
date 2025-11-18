@@ -1,7 +1,15 @@
 import puppeteer from 'puppeteer';
 
 export default async function getDetail(url: string) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-extensions',
+      '--disable-background-networking',
+    ],
+  });
   const page = await browser.newPage();
 
   await browser.setCookie({
@@ -17,15 +25,16 @@ export default async function getDetail(url: string) {
   });
 
   await page.setRequestInterception(true);
-  page.on('request', interceptedRequest => {
-    if (interceptedRequest.isInterceptResolutionHandled()) {
+  page.on('request', request => {
+    if (request.isInterceptResolutionHandled()) {
       return;
     };
     // 不加载图片
-    if (interceptedRequest.url().endsWith('.png') || interceptedRequest.url().endsWith('.jpg')) {
-      interceptedRequest.abort();
+    if (['image', 'stylesheet', 'font', 'media'].includes(request.resourceType())) {
+      request.abort();
+    } else {
+      request.continue();
     }
-    else interceptedRequest.continue();
   });
   page.on('response', response => {
     console.log(response.url());
@@ -34,7 +43,7 @@ export default async function getDetail(url: string) {
   await page.goto(url);
   await page.setViewport({ width: 1080, height: 1024 });
 
-  // 在页面环境中暴露这个函数
+  // 在页面环境中暴露方法
   await page.exposeFunction('getNodeInfo', async () => {
     return 'xxxx';
   });
@@ -50,5 +59,6 @@ export default async function getDetail(url: string) {
     };
   });
 
+  await page.close();
   await browser.close();
 }
