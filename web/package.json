@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@swan-io/srp": "^0.2.6",
+    "fast-jwt": "^6.0.2",
     "next": "16.0.3",
     "puppeteer": "^24.30.0",
     "react": "19.2.0",
