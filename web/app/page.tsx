@@ -1,3 +1,4 @@
+'use client';
 import { createSRPClient } from '@swan-io/srp';
 import { useEffect } from 'react';
 
@@ -5,7 +6,6 @@ const username = 'linus@folkdatorn.s';
 const password = '$uper$ecur';
 
 export default function Home() {
-
   const init = async () => {
     const client = createSRPClient('SHA-256', 2048);
     // const defaultSalt = client.generateSalt();
@@ -14,7 +14,6 @@ export default function Home() {
     // console.log('>>>>> salt: ', defaultSalt);
     // console.log('>>>>> verifier: ', verifier);
     const clientEphemeral = client.generateEphemeral();
-
     const serverEphemeralResponse = await fetch('/api/authentication', {
       method: 'POST',
       headers: {
@@ -46,13 +45,13 @@ export default function Home() {
       }),
     }).then(res => res.json());
 
-    const clientVerify = await client.verifySession(
+    const verifier = client.deriveVerifier(privateKey);
+    console.log('>>>>> verifier: ', verifier);
+    await client.verifySession(
       clientEphemeral.public,
       clientSession,
       serverSessionResponse.proof,
     );
-
-    console.log('>>>>> clientVerify: ', clientVerify);
   }
 
   useEffect(() => {
@@ -61,6 +60,7 @@ export default function Home() {
 
   return (
     <div>
+      22
     </div>
   );
 }

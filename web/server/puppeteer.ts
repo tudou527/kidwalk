@@ -1,6 +1,8 @@
 import puppeteer from 'puppeteer';
 
-export default async function getDetail(url: string) {
+import { getLinkFromText } from '../util/common';
+
+async function getDetail(url: string) {
   const browser = await puppeteer.launch({
     args: [
       '--no-sandbox',
@@ -37,7 +39,7 @@ export default async function getDetail(url: string) {
     }
   });
   page.on('response', response => {
-    console.log(response.url());
+    // console.log(response.url());
   });
 
   await page.goto(url);
@@ -45,20 +47,35 @@ export default async function getDetail(url: string) {
 
   // 在页面环境中暴露方法
   await page.exposeFunction('getNodeInfo', async () => {
-    return 'xxxx';
+    return document.body.innerHTML;
   });
-
-  const hasLogin = await page.evaluate(async () => {
-    const info = await window.getNodeInfo();
-    // 登录判断
-    return {
-      width: window.innerWidth,
-      height: window.innerHeight,
-      url: window.location.href,
-      info,
-    };
+  
+  const data = await page.evaluate(async () => {
+    return document.documentElement.innerHTML;
+    // const info = await window.getNodeInfo();
+    // // 登录判断
+    // return {
+    //   width: window.innerWidth,
+    //   height: window.innerHeight,
+    //   url: window.location.href,
+    //   info,
+    // };
   });
+  console.log('>>>>> data: ', data);
 
   await page.close();
   await browser.close();
 }
+
+new Promise(async () => {
+  const demoText = `
+    杭州余杭｜这片免费露营大草坪太香了～ 🌈余杭枫岭村 ... http://xhslink.com/o/Au87T9oUpas 
+    复制后打开【小红书】查看笔记！
+    `;
+  const [link] = getLinkFromText(demoText);
+  if (!link) {
+    return;
+  }
+
+  await getDetail(link);
+});
