@@ -94,5 +94,4 @@ new Promise(async () => {
   const result = await getDetail(link);
   fs.writeFileSync('./result.json', JSON.stringify(result, null, 2));
 }).then(() => {
-
 })
