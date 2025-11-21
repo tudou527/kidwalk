@@ -1,21 +1,30 @@
-import data from '../result.json';
-import { getPosition } from './lbs';
+import { getPageDetail } from './puppeteer';
+import { getLinkFromText, getPosition } from '@/util/common';
 
 const apiKey = 'sk-d9fd212135ce46a082e75ae30184b44f';
-export async function getStructuredData() {
-  const { comments, note } = data;
+export async function getStructuredData(text: string) {
   const projects = [
-    '爬山','玩水','挖沙','散步','骑车','露营','滑梯','足球','篮球','爬爬架','滑草'
-  ]
+    '爬山', '玩水', '挖沙', '散步', '骑车', '露营', '滑梯', '足球', '篮球', '爬爬架', '滑草'
+  ];
+
+  const link = getLinkFromText(text);
+  if (!link) {
+    return null;
+  }
+  const noteData = await getPageDetail(link);
+  if (!noteData) {
+    return null;
+  }
+
+  const { comments, note } = noteData;
   const promptStr: string[] = [
     `## ${note.title}`,
     `用户：${note.user.nickname} 所在城市：${note.ipLocation}`,
     '### 笔记内容\n${note.desc}',
   ];
-
   if (comments.list.length > 0) {
     promptStr.push('### 笔记评论')
-    comments.list.forEach(comment => {
+    comments.list.forEach((comment: any) => {
       promptStr.push(`${comment.userInfo?.nickname}： ${comment.content}`);
     });
   }
@@ -58,4 +67,9 @@ export async function getStructuredData() {
   }
 }
 
-getStructuredData();
+const demoText = `
+  杭州余杭｜这片免费露营大草坪太香了～ 🌈余杭枫岭村 ... http://xhslink.com/o/Au87T9oUpas 
+  复制后打开【小红书】查看笔记！
+  `;
+const result = await getStructuredData(demoText);
+console.log('>>>>> result: ', result);

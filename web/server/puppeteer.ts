@@ -1,9 +1,11 @@
-import fs from 'fs';
 import puppeteer from 'puppeteer';
 
-import { getLinkFromText } from '../util/common';
+export interface IPageDetail {
+  comments: any;
+  note: any;
+}
 
-async function getDetail(url: string) {
+export async function getPageDetail(url: string): Promise<IPageDetail | null> {
   const browser = await puppeteer.launch({
     args: [
       '--no-sandbox',
@@ -79,19 +81,3 @@ async function getDetail(url: string) {
 
   return pageData;
 }
-
-new Promise(async () => {
-  const demoText = `
-    杭州余杭｜这片免费露营大草坪太香了～ 🌈余杭枫岭村 ... http://xhslink.com/o/Au87T9oUpas 
-    复制后打开【小红书】查看笔记！
-    `;
-  const [link] = getLinkFromText(demoText);
-  console.log('>>>>> link: ', link);
-
-  if (!link) {
-    return;
-  }
-  const result = await getDetail(link);
-  fs.writeFileSync('./result.json', JSON.stringify(result, null, 2));
-}).then(() => {
-})
