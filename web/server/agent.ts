@@ -56,20 +56,24 @@ export async function getStructuredData(text: string) {
       response_format: {
         type: 'json_object'
       }
-    })
+    }),
   }).then(res => res.json());
   const info = JSON.parse(response.choices[0].message.content);
-  const position = await getPosition(info['导航地点'], info['城市']);
+  const positionList = await getPosition(info['导航地点'], info['城市']);
 
   return {
-    ...info,
-    location: position.results,
+    city: info['城市'],
+    region: info['地区'],
+    lbsLocation: info['导航地点'],
+    locationDesc: info['具体地点'],
+    projects: info['游乐项目'],
+    lbsList: positionList,
   }
 }
 
-const demoText = `
-  杭州余杭｜这片免费露营大草坪太香了～ 🌈余杭枫岭村 ... http://xhslink.com/o/Au87T9oUpas 
-  复制后打开【小红书】查看笔记！
-  `;
-const result = await getStructuredData(demoText);
-console.log('>>>>> result: ', result);
+// const demoText = `
+//   杭州余杭｜这片免费露营大草坪太香了～ 🌈余杭枫岭村 ... http://xhslink.com/o/Au87T9oUpas 
+//   复制后打开【小红书】查看笔记！
+//   `;
+// const result = await getStructuredData(demoText);
+// console.log('>>>>> result: ', result);

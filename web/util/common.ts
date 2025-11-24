@@ -8,10 +8,12 @@ export function getLinkFromText(text: string): string {
 
 export async function getPosition(query: string, region: string) {
   const apiKey = 'FYDOCK8BZaLHcqxdGOMYzEx2k6fRMCeE';
-  return fetch(`https://api.map.baidu.com/place/v3/region?query=${query}&region=${region}&ak=${apiKey}`, {
+  const response = await fetch(`https://api.map.baidu.com/place/v3/region?query=${query}&region=${region}&ak=${apiKey}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
     }
   }).then(res => res.json());
+
+  return response.results || [];
 }

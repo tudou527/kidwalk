@@ -1,0 +1,73 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+
+  .msgList {
+    flex: 1;
+    width: 100%;
+    padding: 16px;
+    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  :global(.ant-sender) {
+    margin: 0 auto 16px;
+    max-width: 650px;
+    overflow: hidden;
+
+    :global(.ant-sender-content) {
+      padding: 8px 0 0 0 !important;
+
+      :global(.ant-sender-input) {
+        padding: 4px 4px 4px 12px;
+        min-height: 56px !important;
+        max-height: 56px;
+        scrollbar-width: thin;
+        resize: none;
+        scrollbar-color: rgba(0, 0, 0, 0.65) transparent;
+      }
+    }
+
+    :global(.ant-sender-footer) {
+      padding: 0 12px 8px 8px !important;
+
+      :global(.ant-sender-actions-btn) {
+        border: 0 none;
+      }
+    }
+  }
+
+  .footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 32px;
+    overflow: hidden;
+
+    .tools {
+      height: 32px;
+      overflow: hidden;
+
+      button {
+        padding: 0;
+        height: 32px;
+        min-width: 32px;
+      }
+    }
+  }
+}
+
+@media (max-width: 750px) {
+  .page {
+    :global(.ant-sender) {
+      width: calc(100% - 24px) !important;
+      max-width: none;
+    }
+  }
+}

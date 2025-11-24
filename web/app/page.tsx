@@ -1,66 +1,71 @@
 'use client';
-import { createSRPClient } from '@swan-io/srp';
-import { useEffect } from 'react';
+import { Sender } from '@ant-design/x';
+import { useSetState } from 'ahooks';
+import { Button, message } from 'antd';
+import { IconClipboardText } from '@tabler/icons-react';
 
-const username = 'linus@folkdatorn.s';
-const password = '$uper$ecur';
+import style from './home/style.module.css';
 
-export default function Home() {
-  const init = async () => {
-    const client = createSRPClient('SHA-256', 2048);
-    // const defaultSalt = client.generateSalt();
-    // const privateDefaultKey = await client.derivePrivateKey(defaultSalt, username, password);
-    // const verifier = client.deriveVerifier(privateDefaultKey);
-    // console.log('>>>>> salt: ', defaultSalt);
-    // console.log('>>>>> verifier: ', verifier);
-    const clientEphemeral = client.generateEphemeral();
-    const serverEphemeralResponse = await fetch('/api/authentication', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action: 'ephemeral', username }),
-    }).then(res => res.json());
-    console.log('>>>>> serverEphemeralResponse: ', serverEphemeralResponse);
+interface IState {
+  loading: boolean;
+  content: string;
+  result?: string;
+}
 
-    const privateKey = await client.derivePrivateKey(serverEphemeralResponse.salt, username, password);
-    const clientSession = await client.deriveSession(
-      clientEphemeral.secret,
-      serverEphemeralResponse.public,
-      serverEphemeralResponse.salt,
-      username,
-      privateKey,
-    );
-    const serverSessionResponse = await fetch('/api/authentication', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+export default function Page() {
+  const [state, setState] = useSetState<IState>({
+    loading: false,
+    content: '',
+  });
+
+  // 读取剪切板
+  const handleReadClipboard = async () => {
+    const text = await navigator.clipboard.readText();
+    setState({ content: text.trim() });
+  }
+
+  const handleSubmit = async () => {
+    setState({ loading: true });
+    const response = await fetch('/api/draft', {
+      method: 'post',
       body: JSON.stringify({
-        action: 'session',
-        username,
-        clientEphemeralPublic: clientEphemeral.public,
-        clientSessionProof: clientSession.proof,
-        token: serverEphemeralResponse.token,
+        text: state.content,
       }),
     }).then(res => res.json());
 
-    const verifier = client.deriveVerifier(privateKey);
-    console.log('>>>>> verifier: ', verifier);
-    await client.verifySession(
-      clientEphemeral.public,
-      clientSession,
-      serverSessionResponse.proof,
-    );
+    if (!response.success) {
+      message.error(response.errorMessage);
+    }
+
+    setState({
+      loading: false,
+      result: response.data,
+    });
   }
 
-  useEffect(() => {
-    init();
-  }, []);
-
   return (
-    <div>
-      22
+    <div className={style.page}>
+      <div className={style.msgList}>
+
+      </div>
+      <Sender
+        suffix={false}
+        loading={state.loading}
+        value={state.content}
+        onChange={(val) => setState({ content: val })}
+        onSubmit={handleSubmit}
+        footer={(actionNode) => (
+          <div className={style.footer}>
+            <div className={style.tools}>
+              <Button type="text" onClick={handleReadClipboard}>
+                <IconClipboardText size={20} stroke={2} />
+              </Button>
+            </div>
+            {actionNode}
+          </div>
+        )}
+        autoSize={false}
+      />
     </div>
   );
 }
