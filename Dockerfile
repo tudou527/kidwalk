@@ -2,37 +2,53 @@
 
 # 使用 Node.js 20 Alpine 版本作为基础镜像
 FROM node:20-alpine AS base
+WORKDIR /app
+ENV PNPM_HOME="/root/.local/share/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable pnpm
 
 # 阶段一：依赖安装（只在需要时安装）
 FROM base AS deps
 # 查看 https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine 了解为什么可能需要 libc6-compat
 RUN apk add --no-cache libc6-compat
-WORKDIR /app
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+ENV PUPPETEER_CACHE_DIR=/tmp
 
 # 根据首选的包管理器安装依赖
 COPY web/package.json web/pnpm-lock.yaml ./
-RUN corepack enable pnpm && \
-    pnpm i --frozen-lockfile && \
+RUN pnpm i --frozen-lockfile && \
     pnpm store prune
 
 # 阶段二：构建应用（只在需要时重新构建源代码）
 FROM base AS builder
-WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY web/. .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+ENV PUPPETEER_CACHE_DIR=/tmp
 
-RUN corepack enable pnpm && \
-    pnpm run build && \
-    rm -rf node_modules
+RUN pnpm run build && \
+    rm -rf node_modules && \
+    rm -rf ~/.cache && \
+    rm -rf .next/cache
 
 # 阶段三：生产环境镜像，复制所有文件并运行 Next.js
-FROM base AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
+
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Puppeteer 环境变量配置
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # 创建系统用户和组
 RUN addgroup -g 1001 -S nodejs && \

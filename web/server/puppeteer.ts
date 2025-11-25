@@ -14,6 +14,9 @@ export async function getPageDetail(url: string): Promise<IPageDetail | null> {
       '--disable-extensions',
       '--disable-background-networking',
     ],
+    browser: 'chrome',
+    channel: 'chrome',
+    enableExtensions: ['/home/nextjs/.cache/puppeteer'],
   });
   browser.setCookie({
     name: 'web_session',
